@@ -2,8 +2,10 @@
 #
 # euclid graphics maths module
 #
-# Copyright (c) 2006 Alex Holkner
-# Alex.Holkner@mail.google.com
+# Copyright (c) 2006 Alex Holkner <Alex.Holkner@mail.google.com>
+# Copyright (c) 2011 Eugen Zagorodniy <https://github.com/ezag/>
+# Copyright (c) 2011 Dov Grobgeld <https://github.com/dov>
+# Copyright (c) 2012 Lorenzo Riano <https://github.com/lorenzoriano>
 #
 # This library is free software; you can redistribute it and/or modify it
 # under the terms of the GNU Lesser General Public License as published by the
@@ -26,8 +28,8 @@ at http://code.google.com/p/pyeuclid
 '''
 
 __docformat__ = 'restructuredtext'
-__version__ = '$Id: euclid.py 37 2011-08-21 22:24:05Z elfnor@gmail.com $'
-__revision__ = '$Revision: 37 $'
+__version__ = '$Id$'
+__revision__ = '$Revision$'
 
 import math
 import operator
@@ -1678,6 +1680,10 @@ def _intersect_line2_circle(L, C):
     sq = math.sqrt(det)
     u1 = (-b + sq) / (2 * a)
     u2 = (-b - sq) / (2 * a)
+
+    if u1 * u2 > 0 and not L._u_in(u1) and not L._u_in(u2):
+        return None
+
     if not L._u_in(u1):
         u1 = max(min(u1, 1.0), 0.0)
     if not L._u_in(u2):
@@ -1692,6 +1698,26 @@ def _intersect_line2_circle(L, C):
                                L.p.y + u1 * L.v.y),
                         Point2(L.p.x + u2 * L.v.x,
                                L.p.y + u2 * L.v.y))
+
+def _intersect_circle_circle(A, B):
+    d = abs(A.c - B.c)
+    s = A.r + B.r
+    m = abs(A.r - B.r)
+    if d > s or d < m:
+        return None
+    d2 = d ** 2
+    s2 = s ** 2
+    m2 = m ** 2
+    k = 0.25 * math.sqrt((s2 - d2) * (d2 - m2))
+    dr = (A.r ** 2 - B.r ** 2) / d2
+    kd = 2 * k / d2
+    return (
+      Point2(
+        0.5 * (A.c.x + B.c.x + (B.c.x - A.c.x) * dr) + (B.c.y - A.c.y) * kd,
+        0.5 * (A.c.y + B.c.y + (B.c.y - A.c.y) * dr) - (B.c.x - A.c.x) * kd),
+      Point2(
+        0.5 * (A.c.x + B.c.x + (B.c.x - A.c.x) * dr) - (B.c.y - A.c.y) * kd,
+        0.5 * (A.c.y + B.c.y + (B.c.y - A.c.y) * dr) + (B.c.x - A.c.x) * kd))
 
 def _connect_point2_line2(P, L):
     d = L.v.magnitude_squared()
@@ -1918,6 +1944,9 @@ class Circle(Geometry):
     def _intersect_line2(self, other):
         return _intersect_line2_circle(other, self)
 
+    def _intersect_circle(self, other):
+        return _intersect_circle_circle(other, self)
+
     def connect(self, other):
         return other._connect_circle(self)
 
@@ -1931,6 +1960,10 @@ class Circle(Geometry):
 
     def _connect_circle(self, other):
         return _connect_circle_circle(other, self)
+
+    def tangent_points(self, p):
+        m = 0.5 * (self.c + p)
+        return self.intersect(Circle(m, abs(p - m)))
 
 # 3D Geometry
 # -------------------------------------------------------------------------

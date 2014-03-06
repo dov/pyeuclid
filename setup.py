@@ -4,7 +4,7 @@
 '''
 
 __docformat__ = 'restructuredtext'
-__version__ = '$Id: setup.py 7 2006-08-14 16:36:11Z Alex.Holkner $'
+__version__ = '$Id$'
 
 from distutils.core import setup
 
