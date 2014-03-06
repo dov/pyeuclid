@@ -723,6 +723,11 @@ class Matrix3:
         self *= Matrix3.new_translate(x, y)
         return self 
 
+    def pre_translate(self, x, y):
+        self.c += x
+        self.g += y
+        return self 
+
     def rotate(self, angle):
         self *= Matrix3.new_rotate(angle)
         return self
@@ -998,6 +1003,12 @@ class Matrix4:
 
     def translate(self, x, y, z):
         self *= Matrix4.new_translate(x, y, z)
+        return self 
+
+    def pre_translate(self, x, y, z):
+        self.d += x
+        self.h += y
+        self.l += z
         return self 
 
     def rotatex(self, angle):
