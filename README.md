@@ -1,5 +1,6 @@
 pyeuclid
 ========
+[![Build Status](https://travis-ci.org/brad/pyeuclid.svg?branch=master)](https://travis-ci.org/brad/pyeuclid) [![Coverage Status](https://coveralls.io/repos/brad/pyeuclid/badge.png?branch=master)](https://coveralls.io/r/brad/pyeuclid?branch=master)
 
 2D and 3D maths module for Python
 
@@ -19,7 +20,7 @@ Differences with upstream:
 Usage
 -----
 
-See "euclid.txt" for detailed documentation.  The file is readable as
+See [euclid.rst](euclid.rst) for detailed documentation.  The file is readable as
 plain text, and can also be compiled to a set of HTML pages with the
 included Makefile.  The documentation contains some tests which
 can also be run through the Makefile.

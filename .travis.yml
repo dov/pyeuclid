@@ -1,0 +1,15 @@
+---
+
+language: python
+python:
+  - "2.6"
+  - "2.7"
+  - "3.2"
+  - "3.3"
+install:
+  - pip install coveralls docutils
+script:
+  - make COVERAGE="coverage run --omit=runtests.py"
+  - python setup.py install
+after_success:
+  - coveralls
