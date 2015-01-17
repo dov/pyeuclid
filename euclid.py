@@ -60,6 +60,30 @@ _enable_swizzle_set = False
 if _enable_swizzle_set:
     _use_slots = True
 
+user_format = '%8.2f'
+use_commas = False
+
+def set_formatting(cformat='%8.2f',commas=False):
+    global user_format, use_commas
+    user_format = cformat
+    use_commas = commas
+
+def str_vector(prefix, postfix, shape, values, format=None):
+    '''Turn a list into a formatted vector according to the current
+    user format'''
+    if format is None:
+        format = user_format
+    space = ' ' * len(prefix)
+    line_glue = ((',' if use_commas else '') + '\n'+space)
+    value_glue = ' '+(',' if use_commas else '')
+    return (prefix
+            +line_glue.join(
+                [ value_glue.join([format%values[i]
+                                   for i in range(j*shape[1],
+                                                  (j+1)*shape[1])])
+                                 for j in range(shape[0])])
+            + postfix)
+
 # Implement _use_slots magic.
 class _EuclidMetaclass(type):
     def __new__(cls, name, bases, dct):
@@ -105,7 +129,7 @@ class Vector2:
     copy = __copy__
 
     def __repr__(self):
-        return 'Vector2(%.2f, %.2f)' % (self.x, self.y)
+        return str_vector('Vector2(',')',(1,2),list(self))
 
     def __eq__(self, other):
         if isinstance(other, Vector2):
@@ -325,9 +349,7 @@ class Vector3:
     copy = __copy__
 
     def __repr__(self):
-        return 'Vector3(%.2f, %.2f, %.2f)' % (self.x,
-                                              self.y,
-                                              self.z)
+        return str_vector('Vector3(',')',(1,3),list(self))
 
     def __eq__(self, other):
         if isinstance(other, Vector3):
@@ -616,10 +638,7 @@ class Vector4:
     copy = __copy__
 
     def __repr__(self):
-        return 'Vector4(%.2f, %.2f, %.2f, %.2f)' % (self.x,
-                                                    self.y,
-                                                    self.z,
-                                                    self.w)
+        return str_vector('Vector4(',')',(1,4),list(self))
 
     def __eq__(self, other):
         if isinstance(other, Vector3):
@@ -823,12 +842,10 @@ class Matrix3:
 
     copy = __copy__
     def __repr__(self):
-        return ('Matrix3([% 8.2f % 8.2f % 8.2f\n'  \
-                '         % 8.2f % 8.2f % 8.2f\n'  \
-                '         % 8.2f % 8.2f % 8.2f])') \
-                % (self.a, self.b, self.c,
-                   self.e, self.f, self.g,
-                   self.i, self.j, self.k)
+        return str_vector('Matrix3(',')',(3,3),
+                          [self.a, self.b, self.c,
+                           self.e, self.f, self.g,
+                           self.i, self.j, self.k])
 
     def __getitem__(self, key):
         return [self.a, self.e, self.i,
@@ -1008,6 +1025,19 @@ class Matrix3:
 
             return tmp
 
+    def transpose(self):
+        (self.a, self.e, self.i, 
+         self.b, self.f, self.j, 
+         self.c, self.g, self.k) = \
+        (self.a, self.b, self.c,
+         self.e, self.f, self.g,
+         self.i, self.j, self.k,)
+
+    def transposed(self):
+        M = self.copy()
+        M.transpose()
+        return M
+
 # a b c d
 # e f g h
 # i j k l
@@ -1050,14 +1080,11 @@ class Matrix4:
 
 
     def __repr__(self):
-        return ('Matrix4([% 8.2f % 8.2f % 8.2f % 8.2f\n'  \
-                '         % 8.2f % 8.2f % 8.2f % 8.2f\n'  \
-                '         % 8.2f % 8.2f % 8.2f % 8.2f\n'  \
-                '         % 8.2f % 8.2f % 8.2f % 8.2f])') \
-                % (self.a, self.b, self.c, self.d,
-                   self.e, self.f, self.g, self.h,
-                   self.i, self.j, self.k, self.l,
-                   self.m, self.n, self.o, self.p)
+        return str_vector('Matrix4(',')',(4,4),
+                          [self.a, self.b, self.c, self.d,
+                           self.e, self.f, self.g, self.h,
+                           self.i, self.j, self.k, self.l,
+                           self.m, self.n, self.o, self.p])
 
     def __getitem__(self, key):
         return [self.a, self.e, self.i, self.m,
@@ -2019,7 +2046,7 @@ def _connect_circle_circle(A, B):
 
 class Point2(Vector2, Geometry):
     def __repr__(self):
-        return 'Point2(%.2f, %.2f)' % (self.x, self.y)
+        return str_vector('Point2(',')',(1,2),list(self))
 
     def intersect(self, other):
         return other._intersect_point2(self)
@@ -2377,7 +2404,7 @@ def _intersect_plane_plane(A, B):
 
 class Point3(Vector3, Geometry):
     def __repr__(self):
-        return 'Point3(%.2f, %.2f, %.2f)' % (self.x, self.y, self.z)
+        return str_vector('Point3(',')',(1,3),list(self))
 
     def intersect(self, other):
         return other._intersect_point3(self)
@@ -2642,12 +2669,14 @@ class Plane:
         return _connect_plane_plane(other, self)
 
 if __name__ == '__main__':
-    # testing
-    P = Matrix4(9.5,0,  0,0,
-                0,  9.5,0,0,
-                0,0,-10,-99,
-                0, 0, -1, 0)
-    v = Vector4(1,0,0,1)
+    set_formatting('%8.2g')
+
+#    # testing
+#    P = Matrix4(*range(16))
+#    S = Matrix4(*(i==2 for i in range(16)))
+#    print P
+#    print S
+#    print P*S
+
+    P = Matrix3(*range(9))
     print P
-    print v
-    print P*v
