@@ -605,7 +605,7 @@ class Vector4:
             self.x,self.y,self.z,self.w = args
         elif isinstance(args[0], Vector3):
             self.x,self.y,self.z = list(args[0])
-            self.w = 0
+            self.w = 1
         else:
             print args
             raise Exception('Unsupported Vector4 initialization!')
@@ -799,8 +799,14 @@ class Vector4:
 class Matrix3:
     __slots__ = list('abcefgijk')
 
-    def __init__(self):
-        self.identity()
+    def __init__(self, *args):
+        if len(args):
+            if len(args)==9:
+                (self.a,self.b,self.c,
+                 self.e,self.f,self.g,
+                 self.i,self.j,self.k) = args
+        else:
+            self.identity()
 
     def __copy__(self):
         M = Matrix3()
@@ -1010,8 +1016,15 @@ class Matrix3:
 class Matrix4:
     __slots__ = list('abcdefghijklmnop')
 
-    def __init__(self):
-        self.identity()
+    def __init__(self, *args):
+        if len(args):
+            if len(args)==16:
+                (self.a,self.b,self.c,self.d,
+                 self.e,self.f,self.g,self.h,
+                 self.i,self.j,self.k,self.l,
+                 self.m,self.n,self.o,self.p) = args
+        else:
+            self.identity()
 
     def __copy__(self):
         M = Matrix4()
@@ -2630,10 +2643,10 @@ class Plane:
 
 if __name__ == '__main__':
     # testing
-    P = Matrix4.new(9.5,0,  0,0,
-                    0,  9.5,0,0,
-                    0,0,-10,-99,
-                    0, 0, -1, 0)
+    P = Matrix4(9.5,0,  0,0,
+                0,  9.5,0,0,
+                0,0,-10,-99,
+                0, 0, -1, 0)
     v = Vector4(1,0,0,1)
     print P
     print v
