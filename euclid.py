@@ -589,6 +589,209 @@ class Vector3:
         n = other.normalized()
         return self.dot(n)*n
 
+class Vector4:
+    __slots__ = ['x', 'y', 'z','w']
+    __hash__ = None
+
+    # Support init as
+    #   Vector4(Vector3,w) or as (x,y,z,w)
+    def __init__(self, *args):
+        if len(args)==0:
+            self.x,self.y,self.z,self.w = 0,0,0,1
+        elif len(args)==3:
+            self.x,self.y,self.z = args
+            self.w = 1
+        elif len(args)==4:
+            self.x,self.y,self.z,self.w = args
+        elif isinstance(args[0], Vector3):
+            self.x,self.y,self.z = list(args[0])
+            self.w = 0
+        else:
+            print args
+            raise Exception('Unsupported Vector4 initialization!')
+
+    def __copy__(self):
+        return self.__class__(self.x, self.y, self.z, self.w)
+
+    copy = __copy__
+
+    def __repr__(self):
+        return 'Vector4(%.2f, %.2f, %.2f, %.2f)' % (self.x,
+                                                    self.y,
+                                                    self.z,
+                                                    self.w)
+
+    def __eq__(self, other):
+        if isinstance(other, Vector3):
+            return self.x == other.x and \
+                   self.y == other.y and \
+                   self.z == other.z and \
+                   self.w == other.w 
+        else:
+            assert hasattr(other, '__len__') and len(other) == 4
+            return self.x == other[0] and \
+                   self.y == other[1] and \
+                   self.z == other[2] and \
+                   self.w == other[3]
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __nonzero__(self):
+        return self.x != 0 or self.y != 0 or self.z != 0 or self.w != 0
+
+    def __len__(self):
+        return 4
+
+    def __getitem__(self, key):
+        return (self.x, self.y, self.z, self.w)[key]
+
+    def __setitem__(self, key, value):
+        l = [self.x, self.y, self.z, self.w]
+        l[key] = value
+        self.x, self.y, self.z, self.w = l
+
+    def __iter__(self):
+        return iter((self.x, self.y, self.z, self.w))
+
+    def __getattr__(self, name):
+        print '__getattr('+name+')'
+        try:
+            return tuple([(self.x, self.y, self.z, self.w)['xyzw'.index(c)] \
+                          for c in name])
+        except ValueError:
+            raise AttributeError(name)
+
+    if _enable_swizzle_set:
+        # This has detrimental performance on ordinary setattr as well
+        # if enabled
+        def __setattr__(self, name, value):
+            if len(name) == 1:
+                object.__setattr__(self, name, value)
+            else:
+                try:
+                    l = [self.x, self.y, self.z, self.w]
+                    for c, v in map(None, name, value):
+                        l['xyzw'.index(c)] = v
+                    self.x, self.y, self.z, self.w = l
+                except ValueError:
+                    raise AttributeError(name)
+
+
+    def __add__(self, other):
+        if isinstance(other, Vector4):
+            # Vector + Vector -> Vector
+            # Vector + Point -> Vector
+            # Point + Point -> Vector
+            _class = Vector4
+            return _class(self.x + other.x,
+                          self.y + other.y,
+                          self.z + other.z,
+                          self.w + other.w)  # Is this correct+
+        else:
+            assert hasattr(other, '__len__') and len(other) == 4
+            return Vector4(self.x + other[0],
+                           self.y + other[1],
+                           self.z + other[2],
+                           self.w + other[3])
+    __radd__ = __add__
+
+    def __iadd__(self, other):
+        if isinstance(other, Vector4):
+            self.x += other.x
+            self.y += other.y
+            self.z += other.z
+            self.w += other.w
+        else:
+            self.x += other[0]
+            self.y += other[1]
+            self.z += other[2]
+            self.w += other[3]
+        return self
+
+    def __sub__(self, other):
+        if isinstance(other, Vector4):
+            # Vector - Vector -> Vector
+            # Vector - Point -> Point
+            # Point - Point -> Vector
+            if self.__class__ is other.__class__:
+                _class = Vector4
+            else:
+                _class = Point4
+            return Vector4(self.x - other.x,
+                           self.y - other.y,
+                           self.z - other.z,
+                           self.w - other.w)
+        else:
+            assert hasattr(other, '__len__') and len(other) == 4
+            return Vector3(self.x - other[0],
+                           self.y - other[1],
+                           self.z - other[2],
+                           self.w - other[3])
+
+   
+    def __rsub__(self, other):
+        if isinstance(other, Vector4):
+            return Vector4(other.x - self.x,
+                           other.y - self.y,
+                           other.z - self.z,
+                           other.w - self.w)
+        else:
+            assert hasattr(other, '__len__') and len(other) == 4
+            return Vector4(other.x - self[0],
+                           other.y - self[1],
+                           other.z - self[2],
+                           other.w - self[3])
+
+    def __neg__(self):
+        return Vector3(-self.x,
+                       -self.y,
+                       -self.z,
+                       -self.w)
+
+    __pos__ = __copy__
+    
+    def __abs__(self):
+        return math.sqrt(self.x ** 2 +
+                         self.y ** 2 +
+                         self.z ** 2 +
+                         self.w ** 2
+                         )
+
+    magnitude = __abs__
+
+    def magnitude_squared(self):
+        return (self.x ** 2 + 
+                self.y ** 2 + 
+                self.z ** 2 +
+                self.w ** 2)
+
+    def normalize(self):
+        d = self.magnitude()
+        if d:
+            self.x /= d
+            self.y /= d
+            self.z /= d
+            self.w /= d
+        return self
+
+    def normalized(self):
+        d = self.magnitude()
+        if d:
+            return Vector4(self.x / d, 
+                           self.y / d, 
+                           self.z / d,
+                           self.w / d)
+        return self.copy()
+
+    def dot(self, other):
+        assert isinstance(other, Vector4)
+        return (self.x * other.x + 
+                self.y * other.y + 
+                self.z * other.z +
+                self.w * other.w)
+
+
 # a b c 
 # e f g 
 # i j k 
@@ -925,6 +1128,15 @@ class Matrix4:
             V.x = A.a * B.x + A.b * B.y + A.c * B.z
             V.y = A.e * B.x + A.f * B.y + A.g * B.z
             V.z = A.i * B.x + A.j * B.y + A.k * B.z
+            return V
+        elif isinstance(other, Vector4):
+            A = self
+            B = other
+            V = Vector4(0, 0, 0, 1)
+            V.x = A.a * B.x + A.b * B.y + A.c * B.z + A.d * B.w
+            V.y = A.e * B.x + A.f * B.y + A.g * B.z + A.h * B.w
+            V.z = A.i * B.x + A.j * B.y + A.k * B.z + A.l * B.w
+            V.w = A.m * B.x + A.n * B.y + A.o * B.z + A.p * B.w
             return V
         else:
             other = other.copy()
@@ -2416,3 +2628,13 @@ class Plane:
     def _connect_plane(self, other):
         return _connect_plane_plane(other, self)
 
+if __name__ == '__main__':
+    # testing
+    P = Matrix4.new(9.5,0,  0,0,
+                    0,  9.5,0,0,
+                    0,0,-10,-99,
+                    0, 0, -1, 0)
+    v = Vector4(1,0,0,1)
+    print P
+    print v
+    print P*v
