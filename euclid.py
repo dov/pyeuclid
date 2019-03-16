@@ -105,7 +105,7 @@ class Vector2:
     copy = __copy__
 
     def __repr__(self):
-        return 'Vector2(%.2f, %.2f)' % (self.x, self.y)
+        return 'Vector2(%.4f, %.4f)' % (self.x, self.y)
 
     def __eq__(self, other):
         if isinstance(other, Vector2):
@@ -325,7 +325,7 @@ class Vector3:
     copy = __copy__
 
     def __repr__(self):
-        return 'Vector3(%.2f, %.2f, %.2f)' % (self.x,
+        return 'Vector3(%.4f, %.4f, %.4f)' % (self.x,
                                               self.y,
                                               self.z)
 
@@ -614,9 +614,9 @@ class Matrix3:
 
     copy = __copy__
     def __repr__(self):
-        return ('Matrix3([% 8.2f % 8.2f % 8.2f\n'  \
-                '         % 8.2f % 8.2f % 8.2f\n'  \
-                '         % 8.2f % 8.2f % 8.2f])') \
+        return ('Matrix3([% 10.4f % 10.4f % 10.4f\n'  \
+                '         % 10.4f % 10.4f % 10.4f\n'  \
+                '         % 10.4f % 10.4f % 10.4f])') \
                 % (self.a, self.b, self.c,
                    self.e, self.f, self.g,
                    self.i, self.j, self.k)
@@ -739,6 +739,10 @@ class Matrix3:
         self *= Matrix3.new_rotate(angle)
         return self
 
+    def rotate_around(self, angle, x,y):
+        return self.translate(x,y).rotate(angle).translate(-x,-y)
+        return self
+
     # Static constructors
     def new_identity(cls):
         self = cls()
@@ -768,6 +772,25 @@ class Matrix3:
         self.e = s
         return self
     new_rotate = classmethod(new_rotate)
+
+    def new_rotate_around(self, angle, x,y):
+        return self.new_translate(x,y).rotate(angle).translate(-x,-y)
+    new_rotate_around = classmethod(new_rotate_around)
+
+    # A new matrix from a list of 6 members in the order xx,xy,yx,yy,tx,ty
+    def new_affine(cls, list):
+        self = cls()
+        self.a = list[0]
+        self.b = list[1]
+        self.c = list[4]
+        self.e = list[2]
+        self.f = list[3]
+        self.g = list[5]
+        self.i = 0
+        self.j = 0
+        self.k = 1
+        return self
+    new_affine = classmethod(new_affine)
 
     def determinant(self):
         return (self.a*self.f*self.k 
@@ -834,10 +857,10 @@ class Matrix4:
 
 
     def __repr__(self):
-        return ('Matrix4([% 8.2f % 8.2f % 8.2f % 8.2f\n'  \
-                '         % 8.2f % 8.2f % 8.2f % 8.2f\n'  \
-                '         % 8.2f % 8.2f % 8.2f % 8.2f\n'  \
-                '         % 8.2f % 8.2f % 8.2f % 8.2f])') \
+        return ('Matrix4([% 10.4f % 10.4f % 10.4f % 10.4f\n'  \
+                '         % 10.4f % 10.4f % 10.4f % 10.4f\n'  \
+                '         % 10.4f % 10.4f % 10.4f % 10.4f\n'  \
+                '         % 10.4f % 10.4f % 10.4f % 10.4f])') \
                 % (self.a, self.b, self.c, self.d,
                    self.e, self.f, self.g, self.h,
                    self.i, self.j, self.k, self.l,
@@ -1309,7 +1332,7 @@ class Quaternion:
     copy = __copy__
 
     def __repr__(self):
-        return 'Quaternion(real=%.2f, imag=<%.2f, %.2f, %.2f>)' % \
+        return 'Quaternion(real=%.4f, imag=<%.4f, %.4f, %.4f>)' % \
             (self.w, self.x, self.y, self.z)
 
     def __mul__(self, other):
@@ -1794,7 +1817,7 @@ def _connect_circle_circle(A, B):
 
 class Point2(Vector2, Geometry):
     def __repr__(self):
-        return 'Point2(%.2f, %.2f)' % (self.x, self.y)
+        return 'Point2(%.4f, %.4f)' % (self.x, self.y)
 
     def intersect(self, other):
         return other._intersect_point2(self)
@@ -1855,7 +1878,7 @@ class Line2(Geometry):
     copy = __copy__
 
     def __repr__(self):
-        return 'Line2(<%.2f, %.2f> + u<%.2f, %.2f>)' % \
+        return 'Line2(<%.4f, %.4f> + u<%.4f, %.4f>)' % \
             (self.p.x, self.p.y, self.v.x, self.v.y)
 
     p1 = property(lambda self: self.p)
@@ -1892,7 +1915,7 @@ class Line2(Geometry):
 
 class Ray2(Line2):
     def __repr__(self):
-        return 'Ray2(<%.2f, %.2f> + u<%.2f, %.2f>)' % \
+        return 'Ray2(<%.4f, %.4f> + u<%.4f, %.4f>)' % \
             (self.p.x, self.p.y, self.v.x, self.v.y)
 
     def _u_in(self, u):
@@ -1900,7 +1923,7 @@ class Ray2(Line2):
 
 class LineSegment2(Line2):
     def __repr__(self):
-        return 'LineSegment2(<%.2f, %.2f> to <%.2f, %.2f>)' % \
+        return 'LineSegment2(<%.4f, %.4f> to <%.4f, %.4f>)' % \
             (self.p.x, self.p.y, self.p.x + self.v.x, self.p.y + self.v.y)
 
     def _u_in(self, u):
@@ -1934,7 +1957,7 @@ class Circle(Geometry):
     copy = __copy__
 
     def __repr__(self):
-        return 'Circle(<%.2f, %.2f>, radius=%.2f)' % \
+        return 'Circle(<%.4f, %.4f>, radius=%.4f)' % \
             (self.c.x, self.c.y, self.r)
 
     def _apply_transform(self, t):
@@ -2152,7 +2175,7 @@ def _intersect_plane_plane(A, B):
 
 class Point3(Vector3, Geometry):
     def __repr__(self):
-        return 'Point3(%.2f, %.2f, %.2f)' % (self.x, self.y, self.z)
+        return 'Point3(%.4f, %.4f, %.4f)' % (self.x, self.y, self.z)
 
     def intersect(self, other):
         return other._intersect_point3(self)
@@ -2221,7 +2244,7 @@ class Line3:
     copy = __copy__
 
     def __repr__(self):
-        return 'Line3(<%.2f, %.2f, %.2f> + u<%.2f, %.2f, %.2f>)' % \
+        return 'Line3(<%.4f, %.4f, %.4f> + u<%.4f, %.4f, %.4f>)' % \
             (self.p.x, self.p.y, self.p.z, self.v.x, self.v.y, self.v.z)
 
     p1 = property(lambda self: self.p)
@@ -2264,7 +2287,7 @@ class Line3:
 
 class Ray3(Line3):
     def __repr__(self):
-        return 'Ray3(<%.2f, %.2f, %.2f> + u<%.2f, %.2f, %.2f>)' % \
+        return 'Ray3(<%.4f, %.4f, %.4f> + u<%.4f, %.4f, %.4f>)' % \
             (self.p.x, self.p.y, self.p.z, self.v.x, self.v.y, self.v.z)
 
     def _u_in(self, u):
@@ -2272,7 +2295,7 @@ class Ray3(Line3):
 
 class LineSegment3(Line3):
     def __repr__(self):
-        return 'LineSegment3(<%.2f, %.2f, %.2f> to <%.2f, %.2f, %.2f>)' % \
+        return 'LineSegment3(<%.4f, %.4f, %.4f> to <%.4f, %.4f, %.4f>)' % \
             (self.p.x, self.p.y, self.p.z,
              self.p.x + self.v.x, self.p.y + self.v.y, self.p.z + self.v.z)
 
@@ -2307,7 +2330,7 @@ class Sphere:
     copy = __copy__
 
     def __repr__(self):
-        return 'Sphere(<%.2f, %.2f, %.2f>, radius=%.2f)' % \
+        return 'Sphere(<%.4f, %.4f, %.4f>, radius=%.4f)' % \
             (self.c.x, self.c.y, self.c.z, self.r)
 
     def _apply_transform(self, t):
@@ -2375,7 +2398,7 @@ class Plane:
     copy = __copy__
 
     def __repr__(self):
-        return 'Plane(<%.2f, %.2f, %.2f>.p = %.2f)' % \
+        return 'Plane(<%.4f, %.4f, %.4f>.p = %.4f)' % \
             (self.n.x, self.n.y, self.n.z, self.k)
 
     def _get_point(self):
